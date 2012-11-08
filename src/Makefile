@@ -1,3 +1,4 @@
+default: boba-server boba-client
 clean: clean-boba-server clean-boba-client
 
 clean-boba-server:

@@ -1,12 +1,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netdb.h>
 
 #define MAX_CONNECTIONS 128
-#define BUFFER_SIZE 1
+#define BUFFER_SIZE 1024
 
 const char boba_server_usage_string[] = "boba-server port";
 
@@ -49,6 +50,8 @@ int main(int argc, char *argv[])
   if (listen(boba_server_socket, MAX_CONNECTIONS) == -1)
     die("Unable to open socket");
 
+  printf("Listening for connections on port %s...\n", port);
+
   int accept_socket;
   struct sockaddr_storage remote_address;
   socklen_t address_size;
@@ -68,7 +71,9 @@ int main(int argc, char *argv[])
       die("Unable to accept connection");
 
     while ((read_bytes = recv(accept_socket, buffer, BUFFER_SIZE, 0)) > 0) {
-      printf("Read data: %s\n", (char *)buffer);
+      printf("Read data (%d bytes): %s\n", read_bytes, (char *)buffer);
     }
+
+    close(accept_socket);
   }
 }
