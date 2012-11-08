@@ -58,6 +58,11 @@ int main(int argc, char *argv[])
   address_size = sizeof(remote_address);
   buffer = malloc(BUFFER_SIZE);
   
+  /**
+   * This bit here is particularly pants, since accept blocks until it has an inbound connection
+   *
+   * Lookup select(1) to make this better
+   */
   while (1) {
     if ((accept_socket = accept(boba_server_socket, (struct sockaddr *)&remote_address, &address_size)) == -1)
       die("Unable to accept connection");
