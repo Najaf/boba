@@ -6,7 +6,7 @@
 #include <netdb.h>
 
 #define MAX_CONNECTIONS 128
-#define BUFFER_SIZE 1024
+#define BUFFER_SIZE 1
 
 const char boba_server_usage_string[] = "boba-server port";
 
@@ -52,19 +52,18 @@ int main(int argc, char *argv[])
   int accept_socket;
   struct sockaddr_storage remote_address;
   socklen_t address_size;
-  
-  address_size = sizeof(remote_address);
-  if ((accept_socket = accept(boba_server_socket, (struct sockaddr *)&remote_address, &address_size)) == -1)
-    die("Unable to accept connection");
-
   void *buffer;
   int read_bytes;
-  buffer = malloc(BUFFER_SIZE);
-  if ((read_bytes = recv(accept_socket, buffer, BUFFER_SIZE, 0)) == -1)
-    die("Unable to read from socket");
 
-  if (read_bytes == 0)
-    die("Connection closed");
+  address_size = sizeof(remote_address);
+  buffer = malloc(BUFFER_SIZE);
   
-  printf("Read data: %s", (char *)buffer);
+  while (1) {
+    if ((accept_socket = accept(boba_server_socket, (struct sockaddr *)&remote_address, &address_size)) == -1)
+      die("Unable to accept connection");
+
+    while ((read_bytes = recv(accept_socket, buffer, BUFFER_SIZE, 0)) > 0) {
+      printf("Read data: %s\n", (char *)buffer);
+    }
+  }
 }
