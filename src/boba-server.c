@@ -60,6 +60,10 @@ int main(int argc, char *argv[])
 
   address_size = sizeof(remote_address);
   buffer = malloc(BUFFER_SIZE);
+
+  uint32_t message_size = 0;
+  char *message = malloc(BUFFER_SIZE * sizeof(char));
+  memset(message, 0, sizeof(char) * BUFFER_SIZE);
   
   /**
    * This bit here is particularly pants, since accept blocks until it has an inbound connection
@@ -70,9 +74,19 @@ int main(int argc, char *argv[])
     if ((accept_socket = accept(boba_server_socket, (struct sockaddr *)&remote_address, &address_size)) == -1)
       die("Unable to accept connection");
 
+    printf("Accepting inbound TCP connection\n");
+
     while ((read_bytes = recv(accept_socket, buffer, BUFFER_SIZE, 0)) > 0) {
-      printf("Read data (%d bytes): %s\n", read_bytes, (char *)buffer);
+      memcpy(&message_size, buffer, sizeof(uint32_t));
+      memcpy(message, (char *)(buffer + sizeof(uint32_t)), message_size);
+
+      printf("Read data (%d bytes): %s\n", message_size, message);
+      
+      //now that we're done with the message, clear it out
+      memset(message, 0, sizeof(char) * BUFFER_SIZE);
     }
+
+    printf("Closing inbound TCP connection\n");
 
     close(accept_socket);
   }
