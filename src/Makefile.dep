@@ -1,0 +1,3 @@
+bnet.o: bnet.c
+boba-client.o: boba-client.c bnet.h
+boba-server.o: boba-server.c

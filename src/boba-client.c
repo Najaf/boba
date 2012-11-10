@@ -2,10 +2,9 @@
 #include <stdlib.h>
 #include <errno.h>
 #include <string.h>
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <netdb.h>
 #include <unistd.h>
+#include <stdint.h>
+#include "bnet.h"
 
 #define BUFFER_SIZE 1024
 #define PROMPT_STRING "> "
@@ -37,23 +36,7 @@ int main(int argc, char *argv[])
   port = argv[2];
 
   //make a socket and connect to that port
-  int boba_client_socket;
-  if ((boba_client_socket = socket(PF_INET, SOCK_STREAM, 0)) == -1)
-    die("Unable to create socket");
-
-  // connect to a remote host/post
-  struct addrinfo hints, *res;
-  memset(&hints, 0, sizeof(hints));
-  hints.ai_family = AF_UNSPEC;
-  hints.ai_socktype = SOCK_STREAM;
-  hints.ai_flags = AI_PASSIVE;
-
-  getaddrinfo(host, port, &hints, &res);
-
-  int connection_status;
-  if ((connection_status = connect(boba_client_socket, res->ai_addr, res->ai_addrlen)) != 0)
-    die("Couldn't connect to given host/port");
-
+  int boba_client_socket = create_client_socket(host, port);
   printf("Connected to %s on port %s...\n", host, port);
 
   // now that we're connected, listen for user commands and send them to the server
@@ -77,12 +60,12 @@ int main(int argc, char *argv[])
 
     message_size = strlen(line) - 1;
     memcpy(send_buffer, (void *)&message_size, sizeof(uint32_t));
-    memcpy(send_buffer + sizeof(uint32_t), line, strlen(line) - 1);
+    memcpy(send_buffer + sizeof(uint32_t), line, message_size);
 
-    send(boba_client_socket, send_buffer, sizeof(uint32_t) + strlen(line) - 1, 0);
+    send_bytes_on_tcp_socket(boba_client_socket, send_buffer, sizeof(uint32_t) + strlen(line) -1);
 
-    //printf("(%d bytes): %s", retval, line);
-    //printf("%d:%lu:%c", retval, sizeof(char), line[(retval / sizeof(char)) - 2]);
+    //send(boba_client_socket, send_buffer, sizeof(uint32_t) + strlen(line) - 1, 0);
+
     prompt();
   }
 }
