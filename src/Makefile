@@ -1,5 +1,5 @@
 BOBA_CC = cc
-OBJECT_DEPS = bnet.o berror.o
+OBJECT_DEPS = bnet.o berror.o bmessage.o
 
 default: boba-server boba-client clean-objects
 

@@ -1,9 +1,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <stdint.h>
 #include "bnet.h"
 #include "berror.h"
+#include "bmessage.h"
 
 #define MAX_CONNECTIONS 128
 #define BUFFER_SIZE 1024
@@ -30,16 +30,10 @@ int main(int argc, char *argv[])
   printf("Listening for connections on port %s...\n", port);
 
   int accept_socket;
-  void *buffer;
-  int read_bytes;
 
-  buffer = malloc(BUFFER_SIZE);
-
-  uint32_t message_size = 0;
-  char *message = malloc(BUFFER_SIZE * sizeof(char));
-  memset(message, 0, sizeof(char) * BUFFER_SIZE);
-
-  int retval;
+  // struct to hold our message
+  Message message;
+  initialize_message(&message);
   
   /**
    * This bit here is particularly pants, since accept blocks until it has an inbound connection
@@ -52,22 +46,15 @@ int main(int argc, char *argv[])
     printf("Accepting inbound TCP connection\n");
 
     while (1) {
-      if ((recv_bytes_on_tcp_socket(accept_socket, buffer, sizeof(uint32_t))) < 1)
+      if (recv_message(accept_socket, &message) < 1)
         break;
-      memcpy(&message_size, buffer, sizeof(uint32_t));
-
-      if ((recv_bytes_on_tcp_socket(accept_socket, buffer + sizeof(uint32_t), message_size)) < 1)
-        break;
-      memcpy(message, (char *)(buffer + sizeof(uint32_t)), message_size);
-
-      printf("Read data (%d bytes): %s\n", message_size, message);
-      
-      //now that we're done with the message, clear it out
-      memset(message, 0, sizeof(char) * BUFFER_SIZE);
+      printf("Read data (%d bytes): %s\n", message.length, message.content);
     }
 
     printf("Closing inbound TCP connection\n");
 
     close_tcp_socket(accept_socket);
   }
+
+  free_message(&message);
 }
