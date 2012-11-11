@@ -4,24 +4,23 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
+#include "berror.h"
 
-void die_net(char *message)
-{
-  printf("Error: %s\n", message);
-  exit(1);
-}
+#define BNET_SERVER 1
+#define BNET_CLIENT 2
 
-int create_server_socket(char *host, char *port)
-{
-  return 0;
-}
+#define BNET_SEND 1
+#define BNET_RECV 2
 
-int create_client_socket(char *host, char *port)
+#define TCP_BACKLOG 128
+
+int create_socket(char *host, char *port, int type)
 {
   // try creating the socket
-  int boba_client_socket;
-  if ((boba_client_socket = socket(PF_INET, SOCK_STREAM, 0)) == -1)
-    die_net("Unable to create socket");
+  int boba_socket;
+  if ((boba_socket = socket(PF_INET, SOCK_STREAM, 0)) == -1)
+    die("Unable to create socket");
 
   // connect to a remote host/post
   struct addrinfo hints, *res;
@@ -32,31 +31,79 @@ int create_client_socket(char *host, char *port)
 
   getaddrinfo(host, port, &hints, &res);
 
-  int connection_status;
-  if ((connection_status = connect(boba_client_socket, res->ai_addr, res->ai_addrlen)) != 0)
-    die_net("Couldn't connect to given host/port");
+  if (type == BNET_SERVER) {
+    bind(boba_socket, res->ai_addr, res->ai_addrlen);
+  }
 
-  return boba_client_socket;
+  int status;
+  if (type == BNET_CLIENT) {
+    if ((status = connect(boba_socket, res->ai_addr, res->ai_addrlen)) != 0)
+      die("Couldn't connect to given host/port");
+  } else if(type == BNET_SERVER) {
+    if ((status = listen(boba_socket, TCP_BACKLOG)) != 0)
+      die("Couldn't connect to given host/port");
+  }
+
+  return boba_socket;
 }
 
-void send_bytes_on_tcp_socket(int fd, void *buffer, int bytes)
+int create_server_socket(char *host, char *port)
 {
-  int sent, total_sent;
-  sent = 0;
-  total_sent = 0;
+  return create_socket(host, port, BNET_SERVER);
+}
 
-  while (total_sent < bytes) {
-    sent = send(fd, buffer + total_sent, bytes - total_sent, 0);
-    total_sent += sent;
+int create_client_socket(char *host, char *port)
+{
+  return create_socket(host, port, BNET_CLIENT);
+}
+
+int accept_connection_on_socket(int fd)
+{
+  int accept_socket;
+  struct sockaddr_storage remote_address;
+  socklen_t address_size;
+
+  address_size = sizeof(remote_address);
+
+  if ((accept_socket = accept(fd, (struct sockaddr *)&remote_address, &address_size)) == -1)
+    die("Unable to accept connection");
+
+  return accept_socket;
+}
+
+int transmit_bytes(int fd, void *buffer, int bytes, int type)
+{
+  int transmitted, total_transmitted;
+  transmitted = 0;
+  total_transmitted = 0;
+
+  while (total_transmitted < bytes) {
+    if (type == BNET_SEND) {
+      transmitted = send(fd, buffer + total_transmitted, bytes - total_transmitted, 0);
+    } else if(type == BNET_RECV) {
+      transmitted = recv(fd, buffer + total_transmitted, bytes - total_transmitted, 0);
+    }
+    
+    if (transmitted < 1) {
+      return transmitted;
+    }
+    total_transmitted += transmitted;
   }
+  return total_transmitted;
+}
+
+int send_bytes_on_tcp_socket(int fd, void *buffer, int bytes)
+{
+  return transmit_bytes(fd, buffer, bytes, BNET_SEND);
 }
 
 int recv_bytes_on_tcp_socket(int fd, void *buffer, int bytes)
 {
-  return 0;
+  return transmit_bytes(fd, buffer, bytes, BNET_RECV);
 }
 
-int close_tcp_socket(int fd)
+
+void close_tcp_socket(int fd)
 {
-  return 0;
+  close(fd);
 }

@@ -1,21 +1,14 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <unistd.h>
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <netdb.h>
+#include <stdint.h>
+#include "bnet.h"
+#include "berror.h"
 
 #define MAX_CONNECTIONS 128
 #define BUFFER_SIZE 1024
 
 const char boba_server_usage_string[] = "boba-server port";
-
-void die(char *message)
-{
-  printf("Error: %s\n", message);
-  exit(1);
-}
 
 /**
  * Takes a single argument for the port number to accept connections on
@@ -32,52 +25,39 @@ int main(int argc, char *argv[])
 
   // make a socket
   int boba_server_socket;
-  if ((boba_server_socket = socket(PF_INET, SOCK_STREAM, 0)) == -1)
-    die("Unable to create socket");
 
-  // bind it to a port
-  struct addrinfo hints, *res;
-  memset(&hints, 0, sizeof(hints));
-  hints.ai_family = AF_UNSPEC;
-  hints.ai_socktype = SOCK_STREAM;
-  hints.ai_flags = AI_PASSIVE;
-
-  getaddrinfo("0.0.0.0", port, &hints, &res);
-
-  bind(boba_server_socket, res->ai_addr, res->ai_addrlen);
-  
-  // listen on the port for connections
-  if (listen(boba_server_socket, MAX_CONNECTIONS) == -1)
-    die("Unable to open socket");
-
+  boba_server_socket = create_server_socket("0.0.0.0", port);
   printf("Listening for connections on port %s...\n", port);
 
   int accept_socket;
-  struct sockaddr_storage remote_address;
-  socklen_t address_size;
   void *buffer;
   int read_bytes;
 
-  address_size = sizeof(remote_address);
   buffer = malloc(BUFFER_SIZE);
 
   uint32_t message_size = 0;
   char *message = malloc(BUFFER_SIZE * sizeof(char));
   memset(message, 0, sizeof(char) * BUFFER_SIZE);
+
+  int retval;
   
   /**
    * This bit here is particularly pants, since accept blocks until it has an inbound connection
    *
-   * Lookup select(1) to make this better
+   * Lookup select, epoll, kqueue, livevent etc to make this better
    */
   while (1) {
-    if ((accept_socket = accept(boba_server_socket, (struct sockaddr *)&remote_address, &address_size)) == -1)
-      die("Unable to accept connection");
+    accept_socket = accept_connection_on_socket(boba_server_socket);
 
     printf("Accepting inbound TCP connection\n");
 
-    while ((read_bytes = recv(accept_socket, buffer, BUFFER_SIZE, 0)) > 0) {
+    while (1) {
+      if ((recv_bytes_on_tcp_socket(accept_socket, buffer, sizeof(uint32_t))) < 1)
+        break;
       memcpy(&message_size, buffer, sizeof(uint32_t));
+
+      if ((recv_bytes_on_tcp_socket(accept_socket, buffer + sizeof(uint32_t), message_size)) < 1)
+        break;
       memcpy(message, (char *)(buffer + sizeof(uint32_t)), message_size);
 
       printf("Read data (%d bytes): %s\n", message_size, message);
@@ -88,6 +68,6 @@ int main(int argc, char *argv[])
 
     printf("Closing inbound TCP connection\n");
 
-    close(accept_socket);
+    close_tcp_socket(accept_socket);
   }
 }

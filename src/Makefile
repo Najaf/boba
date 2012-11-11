@@ -1,12 +1,15 @@
 BOBA_CC = cc
-CLIENT_DEPS = bnet.o
+OBJECT_DEPS = bnet.o berror.o
 
 default: boba-server boba-client clean-objects
 
 .c.o: $(BOBA_CC) -c $<
 
-boba-client: $(CLIENT_DEPS)
-	$(BOBA_CC) boba-client.c $(CLIENT_DEPS) -o boba-client
+boba-client: $(OBJECT_DEPS)
+	$(BOBA_CC) boba-client.c $(OBJECT_DEPS) -o boba-client
+
+boba-server: $(OBJECT_DEPS)
+	$(BOBA_CC) boba-server.c $(OBJECT_DEPS) -o boba-server
 
 clean: clean-boba-server clean-boba-client clean-objects
 

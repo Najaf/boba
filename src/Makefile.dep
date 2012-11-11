@@ -1,3 +1,4 @@
+berror.o: berror.c berror.h
 bnet.o: bnet.c
-boba-client.o: boba-client.c bnet.h
+boba-client.o: boba-client.c bnet.h berror.h
 boba-server.o: boba-server.c

@@ -5,23 +5,17 @@
 #include <unistd.h>
 #include <stdint.h>
 #include "bnet.h"
+#include "berror.h"
 
 #define BUFFER_SIZE 1024
 #define PROMPT_STRING "> "
 
 const char boba_client_usage_string[] = "boba-client host port";
 
-void die(char *message)
-{
-  printf("Error: %s\n", message);
-  exit(1);
-}
-
 void prompt()
 {
   printf("%s", PROMPT_STRING);
 }
-
 
 int main(int argc, char *argv[])
 {
