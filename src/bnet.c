@@ -44,6 +44,8 @@ int create_socket(char *host, char *port, int type)
       die("Couldn't connect to given host/port");
   }
 
+  freeaddrinfo(res);
+
   return boba_socket;
 }
 

@@ -11,8 +11,9 @@ typedef struct Message_ {
 } Message;
 
 void initialize_message(Message *message);
+void set_message(Message *message, char *content, uint32_t length);
 void free_message(Message *message);
 int  recv_message(int fd, Message *message);
-void send_message(int fd, Message *message);
+int  send_message(int fd, Message *message);
 
 #endif
