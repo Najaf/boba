@@ -48,6 +48,12 @@ int main(int argc, char *argv[])
   prompt();
 
   while((retval = getline(&line, &size, stdin)) != -1) {
+    // continue on empty line
+    if (strcmp(line, "\n") == 0) {
+      prompt();
+      continue;
+    }
+
     // exit if user punches in 'exit'
     if (strcmp(line, "exit\n") == 0) {
       close(boba_client_socket);
@@ -56,6 +62,10 @@ int main(int argc, char *argv[])
 
     set_message(&message, line, sizeof(char) * (strlen(line) - 1));
     send_message(boba_client_socket, &message);
+
+    if (recv_message(boba_client_socket, &message) < 1)
+      break;
+    printf("Response (%d bytes): %s\n", message.length, message.content);
 
     prompt();
   }

@@ -31,9 +31,11 @@ int main(int argc, char *argv[])
 
   int accept_socket;
 
-  // struct to hold our message
+  // struct to hold message to/from client
   Message message;
   initialize_message(&message);
+
+  char response[BUFFER_SIZE];
   
   /**
    * This bit here is particularly pants, since accept blocks until it has an inbound connection
@@ -46,9 +48,16 @@ int main(int argc, char *argv[])
     printf("Accepting inbound TCP connection\n");
 
     while (1) {
+      //Get a message, print it out
       if (recv_message(accept_socket, &message) < 1)
         break;
       printf("Read data (%d bytes): %s\n", message.length, message.content);
+
+      //send a response saying we got the message
+      sprintf(response, "Got your message (%d bytes): %s", message.length, message.content);
+      printf("%s\n", response);
+      set_message(&message, response, sizeof(char) * strlen(response));
+      send_message(accept_socket, &message);
     }
 
     printf("Closing inbound TCP connection\n");

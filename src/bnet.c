@@ -41,7 +41,7 @@ int create_socket(char *host, char *port, int type)
       die("Couldn't connect to given host/port");
   } else if(type == BNET_SERVER) {
     if ((status = listen(boba_socket, TCP_BACKLOG)) != 0)
-      die("Couldn't connect to given host/port");
+      die("Couldn't listen on given host/port");
   }
 
   freeaddrinfo(res);
