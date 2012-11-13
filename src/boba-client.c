@@ -65,7 +65,7 @@ int main(int argc, char *argv[])
 
     if (recv_message(boba_client_socket, &message) < 1)
       break;
-    printf("Response (%d bytes): %s\n", message.length, message.content);
+    printf("[response]: %s\n", message.content);
 
     prompt();
   }

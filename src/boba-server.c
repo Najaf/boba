@@ -36,6 +36,7 @@ int main(int argc, char *argv[])
   initialize_message(&message);
 
   char response[BUFFER_SIZE];
+
   
   /**
    * This bit here is particularly pants, since accept blocks until it has an inbound connection
@@ -51,11 +52,27 @@ int main(int argc, char *argv[])
       //Get a message, print it out
       if (recv_message(accept_socket, &message) < 1)
         break;
-      printf("Read data (%d bytes): %s\n", message.length, message.content);
+      //printf("Read data (%d bytes): %s\n", message.length, message.content);
 
-      //send a response saying we got the message
-      sprintf(response, "Got your message (%d bytes): %s", message.length, message.content);
-      printf("%s\n", response);
+      //if the command is ping, send back pong
+      if (strncmp(message.content, "ping", 4) == 0) {
+        strcpy(response, "pong");
+        set_message(&message, response, sizeof(char) * strlen(response));
+        send_message(accept_socket, &message);
+        continue;
+      }
+
+      //if the command is echo, send back everything the user sent us
+      if (strncmp(message.content, "echo ", 5) == 0) {
+        strcpy(response, message.content + (5 * sizeof(char)));
+        set_message(&message, response, sizeof(char) * strlen(response));
+        send_message(accept_socket, &message);
+        continue;
+      }
+
+
+      // if we get here, the command is unrecognized
+      strcpy(response, "unrecognized command");
       set_message(&message, response, sizeof(char) * strlen(response));
       send_message(accept_socket, &message);
     }
