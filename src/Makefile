@@ -11,7 +11,10 @@ boba-client: $(OBJECT_DEPS)
 boba-server: $(OBJECT_DEPS)
 	$(BOBA_CC) boba-server.c $(OBJECT_DEPS) -o boba-server
 
-clean: clean-boba-server clean-boba-client clean-objects
+bmaptest: clean-bmaptest bmap.o
+	$(BOBA_CC) bmaptest.c bmap.o -o bmaptest
+
+clean: clean-boba-server clean-boba-client clean-objects clean-bmaptest
 
 clean-objects:
 	rm -f *.o
@@ -28,3 +31,6 @@ clean-boba-server:
 
 clean-boba-client:
 	rm -f boba-client
+
+clean-bmaptest:
+	rm -f bmaptest
