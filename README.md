@@ -1,5 +1,7 @@
 # Boba: A mediocre redis clone
 
+![Boba](http://raw.github.com/Najaf/boba/master/boba.jpg)
+
 ## Why why why?
 
 Purely for educational purposes.
