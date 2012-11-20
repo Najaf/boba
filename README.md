@@ -1,6 +1,6 @@
 # Boba: A mediocre redis clone
 
-![Boba](http://raw.github.com/Najaf/boba/master/boba.jpg)
+![Boba](https://raw.github.com/Najaf/boba/master/boba.jpg)
 
 ## Why why why?
 
