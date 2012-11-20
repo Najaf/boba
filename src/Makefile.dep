@@ -1,4 +1,8 @@
+bcommand.o: bcommand.c bcommand.h
 berror.o: berror.c berror.h
-bnet.o: bnet.c
-boba-client.o: boba-client.c bnet.h berror.h
-boba-server.o: boba-server.c
+bmap.o: bmap.c bmap.h
+bmaptest.o: bmaptest.c bmap.h
+bmessage.o: bmessage.c bmessage.h bnet.h
+bnet.o: bnet.c berror.h
+boba-client.o: boba-client.c bnet.h berror.h bmessage.h
+boba-server.o: boba-server.c bnet.h berror.h bmessage.h

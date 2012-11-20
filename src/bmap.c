@@ -94,6 +94,7 @@ int map_set(Map *map, char *key, char *value)
     //it doesn't exist, so allocate and create it
     MapItem *item = malloc(sizeof(MapItem));
     map_item_init(item, key, value, NULL);
+    item->next = NULL;
     map->items[i] = item;
   }
 
@@ -191,7 +192,6 @@ void map_item_free(MapItem *item, int free_all)
     free(item->next); 
   }
 }
-
 
 int map_free(Map *map)
 {
