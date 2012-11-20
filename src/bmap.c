@@ -1,3 +1,13 @@
+/*
+Implements a basic chained hash table.
+
+Notes:
+  * Implement a better hash function. At the moment it returns sum (the ascii
+    values of all the characters in the string) modulo size of the array.
+  * Consider whether we really need so many reallocs for the string keys and
+    values. Might their be a cleverer way of getting around this? Might setting
+    a maximum key length be good enough?
+*/
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
