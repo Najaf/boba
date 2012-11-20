@@ -32,6 +32,37 @@ void map_init(Map *map)
   memset(map->items, 0, sizeof(*map->items) * HASH_SIZE);
 }
 
+void map_item_init(MapItem *item, char *key, char *value, MapItem *next)
+{
+  size_t key_size, value_size;
+
+  key_size = key ? sizeof(char) * (strlen(key) + 1) : START_KEY_SIZE;
+  item->key = (char *)malloc(key_size);
+  memset(item->key, 0, key_size);
+  if (key) { strcpy(item->key, key); }
+
+  value_size = value ? sizeof(char) * (strlen(value) + 1) : START_VALUE_SIZE;
+  item->value = (char *)malloc(value_size);
+  memset(item->value, 0, value_size);
+  if (value) { strcpy(item->value, value); }
+}
+
+void map_item_set(MapItem *item, char *key, char *value)
+{
+  size_t size;
+  if (key) {
+    size = sizeof(char) * (strlen(key) + 1);
+    item->key = (char *)realloc(item->key, size );
+    strcpy(item->key, key);
+  }
+
+  if (value) {
+    size = sizeof(char) * (strlen(value) + 1);
+    item->value = (char *)realloc(item->value, size );
+    strcpy(item->value, value);
+  }
+}
+
 int map_set(Map *map, char *key, char *value)
 {
   int i = map_hash_key(key);
@@ -42,7 +73,7 @@ int map_set(Map *map, char *key, char *value)
 
     //if the keys are the same, set the value and return
     if (strcmp(item->key, key) == 0) {
-      item->value = value;
+      map_item_set(item, NULL, value);
       return 0;
     } 
 
@@ -51,23 +82,19 @@ int map_set(Map *map, char *key, char *value)
     while (item->next) { 
       item = item->next;
       if (strcmp(item->key, key) == 0) {
-        item->value = value;
+        map_item_set(item, NULL, value);
         return 0;
       }
     }
     MapItem *next_item = malloc(sizeof(MapItem));
-    next_item->key = key;
-    next_item->value = value;
+    map_item_init(next_item, key, value, NULL);
     next_item->next = NULL;
-
     item->next = next_item;
   } else {
     //it doesn't exist, so allocate and create it
     MapItem *item = malloc(sizeof(MapItem));
+    map_item_init(item, key, value, NULL);
     map->items[i] = item;
-    item->key = key;
-    item->value = value;
-    item->next = NULL;
   }
 
   return 0;
@@ -119,6 +146,7 @@ int map_del(Map *map, char *key)
     } else {
       map->items[i] = NULL;
     }
+    map_item_free(item, 0);
     free(item);
     return 0;
   }
@@ -145,9 +173,25 @@ int map_del(Map *map, char *key)
   }
 
   //free the item and return
+  map_item_free(item, 0);
   free(item);
   return 0;
 }
+
+void map_item_free(MapItem *item, int free_all)
+{
+  if (item->key)
+    free(item->key);
+
+  if (item->value)
+    free(item->value);
+
+  if (item->next && free_all) {
+    map_item_free(item->next, 1);
+    free(item->next); 
+  }
+}
+
 
 int map_free(Map *map)
 {
@@ -156,17 +200,8 @@ int map_free(Map *map)
   MapItem *item, *prev;
   for (i = 0; i < map->slots; i++) {
     if ((item = map->items[i])) {
-      //if it's just the one, free it
-      if (!item->next) {
-        free(item);
-      } else {
-        // loop throguh, freeing as we go
-        while(item) {
-          prev = item;
-          item = item->next;
-          free(prev);
-        }
-      }
+      map_item_free(item, 1);
+      free(item);
     }
   }
 
